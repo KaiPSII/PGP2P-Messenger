@@ -6,7 +6,7 @@ namespace PGP2P_Messenger
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello World!");
+            
         }
     }
 }
