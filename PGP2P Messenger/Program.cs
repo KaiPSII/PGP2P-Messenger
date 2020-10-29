@@ -26,7 +26,7 @@ namespace PGP2P_Messenger
         //need receiver's public key
         public byte[] EncryptStringRSA(string text, byte[] key)
         {
-            using (var rsa = RSA.Create())
+            using (var rsa = RSA.Create(2048))
             {
                 rsa.ImportRSAPublicKey(key, out int bytesRead);
                 var data = Encoding.UTF8.GetBytes(text);
@@ -36,7 +36,7 @@ namespace PGP2P_Messenger
         //need private key
         public string DecryptBytesRSA(byte[] data, byte[] key)
         {
-            using (var rsa = RSA.Create())
+            using (var rsa = RSA.Create(2048))
             {
                 rsa.ImportRSAPrivateKey(key, out int bytesRead);
                 var ds = rsa.Decrypt(data, RSAEncryptionPadding.Pkcs1);
@@ -229,7 +229,7 @@ namespace PGP2P_Messenger
                                     }
                                     if (newKey)
                                     {
-                                        var c = new RSACryptoServiceProvider();
+                                        var c = new RSACryptoServiceProvider(2048);
                                         RSAKey = c.ExportRSAPrivateKey();
                                         var privateWriter = new FileStream(@"Keys\PRIVATERSAKEY.xkey", FileMode.Create);
                                         privateWriter.Write(c.ExportRSAPrivateKey());
@@ -304,17 +304,15 @@ namespace PGP2P_Messenger
                                 var es = EncryptStringRSA(mc, RSATargetKey);
                                 Console.WriteLine("<BEGIN RSA MESSAGE>");
                                 var outputMessage = new FileStream(String.Format("Messages\\{0}.rsam", RSATargetKeyName), FileMode.Create);
-                                var streamWriter = new StreamWriter(outputMessage);
                                 for (int i = 0; i < es.Length; i++)
                                 {
                                     Console.Write(es[i]);
-                                    streamWriter.Write(es[i]);
                                 }
+                                outputMessage.Write(es);
                                 Console.WriteLine("\n<END RSA MESSAGE>");
-                                streamWriter.Close();
                                 outputMessage.Close();
                                 Console.ForegroundColor = ConsoleColor.Green;
-                                Console.WriteLine(String.Format("<< Message saved to {0} >>",outputMessage.Name));
+                                Console.WriteLine(String.Format("<< Message saved to {0} >>", outputMessage.Name));
                                 Console.ForegroundColor = ConsoleColor.White;
                                 Console.WriteLine("Press any key to return");
                                 Console.ReadKey();
@@ -325,20 +323,61 @@ namespace PGP2P_Messenger
                                 Console.ForegroundColor = ConsoleColor.Red;
                                 Console.WriteLine(">> TARGET A KEY BEFORE ACCESSING ENCRYPTION <<");
                                 Console.ForegroundColor = ConsoleColor.White;
+                                Console.WriteLine("Press any key to return");
+                                Console.ReadKey();
+                                Console.Clear();
                             }
                         }
                     }
                     if (k.Key == ConsoleKey.D2)
                     {
-                        Console.WriteLine("0. Open local file");
-                        Console.WriteLine("1. Receive over network");
+                        Console.WriteLine("0. AES");
+                        Console.WriteLine("1. RSA");
                         Console.WriteLine("Please make a selection:");
                         var k2 = Console.ReadKey();
                         Console.Clear();
-                        if (k2.Key == ConsoleKey.D0)
+                        if (k2.Key == ConsoleKey.D1)
                         {
-                            var files = Directory.GetFiles("Messages", ".xtm");
+                            if (RSAKey != null)
+                            {
+                                var files = Directory.GetFiles("Messages", @"*.rsam");
+                                if (files.Length > 0)
+                                {
+                                    Console.WriteLine("Found the following message files:");
+                                    for (int i = 0; i < files.Length; i++)
+                                    {
+                                        Console.WriteLine(String.Format("{0}. '{1}'", i, files[i]));
+                                    }
+                                    Console.WriteLine("Please make a selection:");
+                                    var k3 = Console.ReadKey();
+                                    Console.Clear();
+                                    if (char.IsDigit(k3.KeyChar))
+                                    {
+                                        var message = new FileStream(files[int.Parse(k3.KeyChar.ToString())], FileMode.Open);
+                                        byte[] bytes2 = new byte[256];
+                                        message.Read(bytes2, 0, (int)message.Length);
+                                        message.Close();
+                                        var ds = DecryptBytesRSA(bytes2, RSAKey);
+                                        Console.WriteLine("<BEGIN PLAINTEXT MESSAGE>");
+                                        Console.WriteLine(ds);
+                                        Console.WriteLine("<END PLAINTEXT MESSAGE>");
+                                        Console.WriteLine("Press any key to return");
+                                        Console.ReadKey();
+                                        Console.Clear();
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                Console.ForegroundColor = ConsoleColor.Red;
+                                Console.WriteLine(">> LOAD A KEY BEFORE ACCESSING DECRYPTION <<");
+                                Console.ForegroundColor = ConsoleColor.White;
+                                Console.WriteLine("Press any key to return");
+                                Console.ReadKey();
+                                Console.Clear();
+                            }
                         }
+
                     }
                     if (k.Key == ConsoleKey.D4)
                     {
