@@ -11,7 +11,9 @@ namespace PGP2P_Messenger
     {
         public byte[] RSAKey;
         public byte[] RSATargetKey;
+        public string RSATargetKeyName;
         public byte[] AESKey;
+        public string username;
         static void Main(string[] args)
         {
             Console.InputEncoding = Encoding.UTF8;
@@ -66,203 +68,291 @@ namespace PGP2P_Messenger
         {
             while (true)
             {
-                if (RSAKey == null && AESKey == null)
+                if (username != null)
                 {
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine(">> NO KEY LOADED <<");
-                    Console.ForegroundColor = ConsoleColor.White;
-                }
-                Console.WriteLine("Initializing PGP2P Messenger");
-                Console.WriteLine("0. Configure keys");
-                Console.WriteLine("1. Send message");
-                Console.WriteLine("2. Receive message");
-                Console.WriteLine("3. Quit");
-                Console.WriteLine("Please make a selection:");
-                var k = Console.ReadKey();
-                Console.Clear();
-                if (k.Key == ConsoleKey.D0)
-                {
-                    Console.WriteLine("0. AES");
-                    Console.WriteLine("1. RSA");
-                    Console.WriteLine("Please make a selection:");
-                    var k2 = Console.ReadKey();
                     Console.Clear();
-                    if (k2.Key == ConsoleKey.D0)
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    Console.WriteLine(String.Format(">> SIGNED IN AS '{0}' <<", username));
+                    Console.ForegroundColor = ConsoleColor.White;
+                    Console.WriteLine("Initializing PGP2P Messenger");
+                    Console.WriteLine();
+                    if (RSAKey == null)
                     {
-                        //check for key file
-                        if (false)
-                        {
-
-                        }
-                        else
-                        {
-                            Console.WriteLine("No AES key found! Generate new key? Y/N:");
-                            var k3 = Console.ReadKey();
-                            Console.Clear();
-                            if (k3.Key == ConsoleKey.Y)
-                            {
-                                var c = Aes.Create();
-                                c.GenerateKey();
-                                AESKey = c.Key;
-                                Console.WriteLine("Key saved");
-                            }
-                        }
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        Console.WriteLine(">> NO KEY LOADED <<");
                     }
-                    bool newKey = false;
-                    if (k2.Key == ConsoleKey.D1)
+                    else
                     {
-                        //check for key file
-                        if (File.Exists(@"Keys\PRIVATERSAKEY.xkey") && File.Exists(@"Keys\PUBLICRSAKEY.xtkey"))
+                        Console.ForegroundColor = ConsoleColor.Green;
+                        Console.WriteLine(">> LOCAL KEY LOADED <<");
+                    }
+                    if (RSATargetKey == null)
+                    {
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        Console.WriteLine(">> NO KEY TARGETED <<");
+                    }
+                    else
+                    {
+                        Console.ForegroundColor = ConsoleColor.Green;
+                        Console.WriteLine(String.Format(">> KEY '{0}' TARGETED <<", RSATargetKeyName));
+                    }
+                    Console.ForegroundColor = ConsoleColor.White;
+                    Console.WriteLine("0. Configure keys");
+                    Console.WriteLine("1. Send message");
+                    Console.WriteLine("2. Receive message");
+                    Console.WriteLine("3. Connect over network");
+                    Console.WriteLine("4. Quit");
+                    Console.WriteLine("Please make a selection:");
+                    var k = Console.ReadKey();
+                    Console.Clear();
+                    if (k.Key == ConsoleKey.D0)
+                    {
+                        Console.WriteLine("0. AES");
+                        Console.WriteLine("1. RSA");
+                        Console.WriteLine("Please make a selection:");
+                        var k2 = Console.ReadKey();
+                        Console.Clear();
+                        if (k2.Key == ConsoleKey.D0)
                         {
-                            var keyFilePrivate = new FileStream(@"Keys\PRIVATERSAKEY.xkey", FileMode.Open);
-                            var keyFilePublic = new FileStream(@"Keys\PUBLICRSAKEY.xtkey", FileMode.Open);
-                            Console.WriteLine("RSA key found. Load key? Y/N:");
-                            var k3 = Console.ReadKey();
-                            Console.Clear();
-                            if (k3.Key == ConsoleKey.Y)
+                            //check for key file
+                            if (false)
                             {
-                                byte[] bytes = new byte[keyFilePrivate.Length];
-                                keyFilePrivate.Read(bytes, 0, (int)keyFilePrivate.Length);
-                                keyFilePrivate.Close();
-                                RSAKey = bytes;
-                                byte[] bytes2 = new byte[keyFilePublic.Length];
-                                keyFilePublic.Read(bytes2, 0, (int)keyFilePublic.Length);
-                                keyFilePublic.Close();
-                                RSATargetKey = bytes2;
-                                Console.ForegroundColor = ConsoleColor.Green;
-                                Console.WriteLine(">> Key loaded <<");
-                                Console.ForegroundColor = ConsoleColor.White;
+
                             }
                             else
                             {
-                                Console.WriteLine("Generate new key?");
-                                Console.ForegroundColor = ConsoleColor.Red;
-                                Console.WriteLine(">> WARNING: THIS WILL DELETE YOUR EXISTING KEY <<");
-                                Console.WriteLine(">> PRESS THE X KEY FIVE TIMES TO CONFIRM, OR PRESS ESCAPE TO CANCEL <<");
-                                var x = 0;
-                                while (x < 5)
+                                Console.WriteLine("No AES key found! Generate new key? Y/N:");
+                                var k3 = Console.ReadKey();
+                                Console.Clear();
+                                if (k3.Key == ConsoleKey.Y)
                                 {
-                                    var k4 = Console.ReadKey();
-                                    if (k4.Key == ConsoleKey.X)
+                                    var c = Aes.Create();
+                                    c.GenerateKey();
+                                    AESKey = c.Key;
+                                    Console.WriteLine("Key saved");
+                                }
+                            }
+                        }
+                        bool newKey = false;
+                        if (k2.Key == ConsoleKey.D1)
+                        {
+                            while (true)
+                            {
+                                if (RSAKey == null)
+                                {
+                                    Console.ForegroundColor = ConsoleColor.Red;
+                                    Console.WriteLine(">> NO KEY LOADED <<");
+                                }
+                                else
+                                {
+                                    Console.ForegroundColor = ConsoleColor.Green;
+                                    Console.WriteLine(">> LOCAL KEY LOADED <<");
+                                }
+                                if (RSATargetKey == null)
+                                {
+                                    Console.ForegroundColor = ConsoleColor.Red;
+                                    Console.WriteLine(">> NO KEY TARGETED <<");
+                                }
+                                else
+                                {
+                                    Console.ForegroundColor = ConsoleColor.Green;
+                                    Console.WriteLine(String.Format(">> KEY '{0}' TARGETED <<", RSATargetKeyName));
+                                }
+                                Console.ForegroundColor = ConsoleColor.White;
+
+                                Console.WriteLine("0. Load key");
+                                Console.WriteLine("1. Target key");
+                                Console.WriteLine("2. Back");
+                                Console.WriteLine("Please make a selection:");
+                                var k3 = Console.ReadKey();
+                                Console.Clear();
+                                if (k3.Key == ConsoleKey.D0)
+                                {
+                                    if (File.Exists(@"Keys\PRIVATERSAKEY.xkey"))
                                     {
-                                        x++;
-                                        Console.CursorLeft -= 1;
-                                        Console.Write("\u2588");
-                                        Console.Write("\u2588");
+                                        var keyFilePrivate = new FileStream(@"Keys\PRIVATERSAKEY.xkey", FileMode.Open);
+                                        Console.WriteLine("RSA key found. Load key? Y/N:");
+                                        var k4 = Console.ReadKey();
+                                        Console.Clear();
+                                        if (k4.Key == ConsoleKey.Y)
+                                        {
+                                            byte[] bytes = new byte[keyFilePrivate.Length];
+                                            keyFilePrivate.Read(bytes, 0, (int)keyFilePrivate.Length);
+                                            keyFilePrivate.Close();
+                                            RSAKey = bytes;
+                                        }
+                                        else
+                                        {
+                                            Console.WriteLine("Generate new key?");
+                                            Console.ForegroundColor = ConsoleColor.Red;
+                                            Console.WriteLine(">> WARNING: THIS WILL DELETE YOUR EXISTING KEYPAIR <<");
+                                            Console.WriteLine(">> PRESS THE X KEY FIVE TIMES TO CONFIRM, OR PRESS ESCAPE TO CANCEL <<");
+                                            var x = 0;
+                                            while (x < 5)
+                                            {
+                                                var k5 = Console.ReadKey();
+                                                if (k5.Key == ConsoleKey.X)
+                                                {
+                                                    x++;
+                                                    Console.CursorLeft -= 1;
+                                                    Console.Write("\u2588");
+                                                    Console.Write("\u2588");
+                                                }
+                                                else
+                                                {
+                                                    Console.Clear();
+                                                    break;
+                                                }
+                                            }
+                                            if (x == 5)
+                                            {
+                                                Console.ForegroundColor = ConsoleColor.White;
+
+                                                Console.Clear();
+
+                                                keyFilePrivate.Close();
+                                                File.Delete(@"Keys\PRIVATERSAKEY.xkey");
+                                                File.Delete(String.Format("Keys\\{0}.xtkey", username));
+                                                newKey = true;
+                                            }
+                                        }
                                     }
                                     else
                                     {
+                                        Console.WriteLine("No RSA key found! Generate new key? Y/N:");
+                                        var k4 = Console.ReadKey();
                                         Console.Clear();
-                                        break;
+                                        if (k4.Key == ConsoleKey.Y)
+                                        {
+                                            newKey = true;
+                                        }
+                                    }
+                                    if (newKey)
+                                    {
+                                        var c = new RSACryptoServiceProvider();
+                                        RSAKey = c.ExportRSAPrivateKey();
+                                        var privateWriter = new FileStream(@"Keys\PRIVATERSAKEY.xkey", FileMode.Create);
+                                        privateWriter.Write(c.ExportRSAPrivateKey());
+                                        privateWriter.Close();
+                                        var publicWriter = new FileStream(String.Format("Keys\\{0}.xtkey", username), FileMode.Create);
+                                        publicWriter.Write(c.ExportRSAPublicKey());
+                                        publicWriter.Close();
                                     }
                                 }
-                                if (x == 5)
+                                if (k3.Key == ConsoleKey.D1)
                                 {
-                                    Console.ForegroundColor = ConsoleColor.White;
-
-                                    Console.Clear();
-
-                                    keyFilePrivate.Close();
-                                    keyFilePublic.Close();
-                                    File.Delete(@"Keys\PRIVATERSAKEY.xkey");
-                                    File.Delete(@"Keys\PUBLICRSAKEY.xkey");
-                                    Console.ForegroundColor = ConsoleColor.Red;
-                                    Console.WriteLine(">> Key deleted <<");
-                                    Console.ForegroundColor = ConsoleColor.White;
-                                    newKey = true;
+                                    var publicKeys = Directory.GetFiles("Keys", @"*.xtkey");
+                                    if (publicKeys.Length > 0)
+                                    {
+                                        Console.WriteLine("Found the following keys:");
+                                        for (int i = 0; i < publicKeys.Length; i++)
+                                        {
+                                            Console.WriteLine(String.Format("{0}. '{1}'", i, publicKeys[i]));
+                                        }
+                                        Console.WriteLine("Please make a selection:");
+                                        var k4 = Console.ReadKey();
+                                        Console.Clear();
+                                        if (char.IsDigit(k4.KeyChar))
+                                        {
+                                            var keyTarget = new FileStream(publicKeys[int.Parse(k4.KeyChar.ToString())], FileMode.Open);
+                                            byte[] bytes2 = new byte[keyTarget.Length];
+                                            keyTarget.Read(bytes2, 0, (int)keyTarget.Length);
+                                            keyTarget.Close();
+                                            RSATargetKey = bytes2;
+                                            RSATargetKeyName = Path.GetFileNameWithoutExtension(publicKeys[int.Parse(k4.KeyChar.ToString())]);
+                                        }
+                                    }
+                                    else
+                                    {
+                                        Console.ForegroundColor = ConsoleColor.Red;
+                                        Console.WriteLine(">> NO TARGETABLE KEYS FOUND ON LOCAL DEVICE <<");
+                                        Console.ForegroundColor = ConsoleColor.White;
+                                        Console.WriteLine("Press any key to return");
+                                        Console.ReadKey();
+                                        Console.Clear();
+                                    }
+                                }
+                                if (k3.Key == ConsoleKey.D2)
+                                {
+                                    break;
                                 }
                             }
                         }
-                        else
-                        {
-                            Console.WriteLine("No RSA key found! Generate new key? Y/N:");
-                            var k3 = Console.ReadKey();
-                            Console.Clear();
-                            if (k3.Key == ConsoleKey.Y)
-                            {
-                                newKey = true;
-                            }
-                        }
-                        if (newKey)
-                        {
-                            var c = new RSACryptoServiceProvider();
-                            RSAKey = c.ExportRSAPrivateKey();
-                            RSATargetKey = c.ExportRSAPublicKey();
-                            var privateWriter = new FileStream(@"Keys\PRIVATERSAKEY.xkey", FileMode.Create);
-                            privateWriter.Write(c.ExportRSAPrivateKey());
-                            privateWriter.Close();
-                            var publicWriter = new FileStream(@"Keys\PUBLICRSAKEY.xtkey", FileMode.Create);
-                            publicWriter.Write(c.ExportRSAPublicKey());
-                            publicWriter.Close();
-                            Console.ForegroundColor = ConsoleColor.Green;
-                            Console.WriteLine(">> Key created <<");
-                            Console.WriteLine(">> Key loaded <<");
-                            Console.ForegroundColor = ConsoleColor.White;
-                        }
                     }
-
-                }
-                if (k.Key == ConsoleKey.D1)
-                {
-                    Console.WriteLine("0. AES");
-                    Console.WriteLine("1. RSA");
-                    Console.WriteLine("Please make a selection:");
-                    var k2 = Console.ReadKey();
-                    Console.Clear();
-                    if (k2.Key == ConsoleKey.D0)
+                    if (k.Key == ConsoleKey.D1)
                     {
-                        Console.WriteLine("Enter message content:");
-                        var mc = Console.ReadLine();
-                        byte[] key = { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16 };
-                        byte[] iv = { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16 };
-                        var es = EncryptStringAES(mc, key, iv);
-                        Console.WriteLine(es);
-                    }
-                    if (k2.Key == ConsoleKey.D1)
-                    {
-                        if (RSAKey != null)
+                        Console.WriteLine("0. AES");
+                        Console.WriteLine("1. RSA");
+                        Console.WriteLine("Please make a selection:");
+                        var k2 = Console.ReadKey();
+                        Console.Clear();
+                        if (k2.Key == ConsoleKey.D0)
                         {
                             Console.WriteLine("Enter message content:");
                             var mc = Console.ReadLine();
-                            var es = EncryptStringRSA(mc, RSATargetKey);
-                            Console.WriteLine("<BEGIN RSA MESSAGE>");
-                            for (int i = 0; i < es.Length; i++)
-                            {
-                                Console.Write(es[i]);
-                            }
-                            Console.WriteLine("\n<END RSA MESSAGE>");
-                            var ds = DecryptBytesRSA(es, RSAKey);
-                            Console.WriteLine("Decryption as follows:");
-                            Console.WriteLine("<BEGIN PLAINTEXT MESSAGE>");
-                            Console.WriteLine(ds);
-                            Console.WriteLine("<END PLAINTEXT MESSAGE>");
-                            Console.WriteLine("Press any key to return");
-                            Console.ReadKey();
-                            Console.Clear();
+                            byte[] key = { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16 };
+                            byte[] iv = { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16 };
+                            var es = EncryptStringAES(mc, key, iv);
+                            Console.WriteLine(es);
                         }
-                        else
+                        if (k2.Key == ConsoleKey.D1)
                         {
-                            Console.ForegroundColor = ConsoleColor.Red;
-                            Console.WriteLine(">> LOAD A KEY BEFORE ACCESSING ENCRYPTION <<");
-                            Console.ForegroundColor = ConsoleColor.White;
+                            if (RSATargetKey != null)
+                            {
+                                Console.WriteLine("Enter message content:");
+                                var mc = Console.ReadLine();
+                                var es = EncryptStringRSA(mc, RSATargetKey);
+                                Console.WriteLine("<BEGIN RSA MESSAGE>");
+                                var outputMessage = new FileStream(String.Format("Messages\\{0}.rsam", RSATargetKeyName), FileMode.Create);
+                                var streamWriter = new StreamWriter(outputMessage);
+                                for (int i = 0; i < es.Length; i++)
+                                {
+                                    Console.Write(es[i]);
+                                    streamWriter.Write(es[i]);
+                                }
+                                Console.WriteLine("\n<END RSA MESSAGE>");
+                                streamWriter.Close();
+                                outputMessage.Close();
+                                Console.ForegroundColor = ConsoleColor.Green;
+                                Console.WriteLine(String.Format("<< Message saved to {0} >>",outputMessage.Name));
+                                Console.ForegroundColor = ConsoleColor.White;
+                                Console.WriteLine("Press any key to return");
+                                Console.ReadKey();
+                                Console.Clear();
+                            }
+                            else
+                            {
+                                Console.ForegroundColor = ConsoleColor.Red;
+                                Console.WriteLine(">> TARGET A KEY BEFORE ACCESSING ENCRYPTION <<");
+                                Console.ForegroundColor = ConsoleColor.White;
+                            }
                         }
                     }
-                }
-                if(k.Key == ConsoleKey.D2)
-                {
-                    Console.WriteLine("0. Open local file");
-                    Console.WriteLine("1. Receive over network");
-                    Console.WriteLine("Please make a selection:");
-                    var k2 = Console.ReadKey();
-                    Console.Clear();
-                    if(k2.Key == ConsoleKey.D0)
+                    if (k.Key == ConsoleKey.D2)
                     {
-                        var files = Directory.GetFiles("Messages",".xtm");
+                        Console.WriteLine("0. Open local file");
+                        Console.WriteLine("1. Receive over network");
+                        Console.WriteLine("Please make a selection:");
+                        var k2 = Console.ReadKey();
+                        Console.Clear();
+                        if (k2.Key == ConsoleKey.D0)
+                        {
+                            var files = Directory.GetFiles("Messages", ".xtm");
+                        }
+                    }
+                    if (k.Key == ConsoleKey.D4)
+                    {
+                        break;
                     }
                 }
-                if (k.Key == ConsoleKey.D3)
+                else
                 {
-                    break;
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine(">> NOT SIGNED IN <<");
+                    Console.ForegroundColor = ConsoleColor.White;
+                    Console.WriteLine("Enter your username:");
+                    username = Console.ReadLine();
+                    Console.Clear();
                 }
             }
         }
