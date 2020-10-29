@@ -303,7 +303,7 @@ namespace PGP2P_Messenger
                                 var mc = Console.ReadLine();
                                 var es = EncryptStringRSA(mc, RSATargetKey);
                                 Console.WriteLine("<BEGIN RSA MESSAGE>");
-                                var outputMessage = new FileStream(String.Format("Messages\\{0}.rsam", RSATargetKeyName), FileMode.Create);
+                                var outputMessage = new FileStream(String.Format("Messages\\from{0}to{1}.rsam", username, RSATargetKeyName), FileMode.Create);
                                 for (int i = 0; i < es.Length; i++)
                                 {
                                     Console.Write(es[i]);
