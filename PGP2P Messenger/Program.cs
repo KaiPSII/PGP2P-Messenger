@@ -16,6 +16,8 @@ namespace PGP2P_Messenger
         {
             Console.InputEncoding = Encoding.UTF8;
             Console.OutputEncoding = Encoding.UTF8;
+            Directory.CreateDirectory("Keys");
+            Directory.CreateDirectory("Messages");
             var p = new Program();
             p.UI();
         }
@@ -110,10 +112,10 @@ namespace PGP2P_Messenger
                     if (k2.Key == ConsoleKey.D1)
                     {
                         //check for key file
-                        if (File.Exists("PRIVATERSAKEY.xkey") && File.Exists("PUBLICRSAKEY.xtkey"))
+                        if (File.Exists(@"Keys\PRIVATERSAKEY.xkey") && File.Exists(@"Keys\PUBLICRSAKEY.xtkey"))
                         {
-                            var keyFilePrivate = new FileStream("PRIVATERSAKEY.xkey", FileMode.Open);
-                            var keyFilePublic = new FileStream("PUBLICRSAKEY.xtkey", FileMode.Open);
+                            var keyFilePrivate = new FileStream(@"Keys\PRIVATERSAKEY.xkey", FileMode.Open);
+                            var keyFilePublic = new FileStream(@"Keys\PUBLICRSAKEY.xtkey", FileMode.Open);
                             Console.WriteLine("RSA key found. Load key? Y/N:");
                             var k3 = Console.ReadKey();
                             Console.Clear();
@@ -162,8 +164,8 @@ namespace PGP2P_Messenger
 
                                     keyFilePrivate.Close();
                                     keyFilePublic.Close();
-                                    File.Delete("PRIVATERSAKEY.xkey");
-                                    File.Delete("PUBLICRSAKEY.xkey");
+                                    File.Delete(@"Keys\PRIVATERSAKEY.xkey");
+                                    File.Delete(@"Keys\PUBLICRSAKEY.xkey");
                                     Console.ForegroundColor = ConsoleColor.Red;
                                     Console.WriteLine(">> Key deleted <<");
                                     Console.ForegroundColor = ConsoleColor.White;
@@ -186,10 +188,10 @@ namespace PGP2P_Messenger
                             var c = new RSACryptoServiceProvider();
                             RSAKey = c.ExportRSAPrivateKey();
                             RSATargetKey = c.ExportRSAPublicKey();
-                            var privateWriter = new FileStream("PRIVATERSAKEY.xkey", FileMode.Create);
+                            var privateWriter = new FileStream(@"Keys\PRIVATERSAKEY.xkey", FileMode.Create);
                             privateWriter.Write(c.ExportRSAPrivateKey());
                             privateWriter.Close();
-                            var publicWriter = new FileStream("PUBLICRSAKEY.xtkey", FileMode.Create);
+                            var publicWriter = new FileStream(@"Keys\PUBLICRSAKEY.xtkey", FileMode.Create);
                             publicWriter.Write(c.ExportRSAPublicKey());
                             publicWriter.Close();
                             Console.ForegroundColor = ConsoleColor.Green;
@@ -253,7 +255,10 @@ namespace PGP2P_Messenger
                     Console.WriteLine("Please make a selection:");
                     var k2 = Console.ReadKey();
                     Console.Clear();
-
+                    if(k2.Key == ConsoleKey.D0)
+                    {
+                        var files = Directory.GetFiles("Messages",".xtm");
+                    }
                 }
                 if (k.Key == ConsoleKey.D3)
                 {
