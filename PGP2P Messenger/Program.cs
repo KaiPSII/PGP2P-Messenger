@@ -417,7 +417,7 @@ namespace PGP2P_Messenger
                             {
                                 break;
                             }
-                            if (output == null)
+                            if (output == null || !output.Connected)
                             {
                                 try
                                 {
@@ -427,7 +427,7 @@ namespace PGP2P_Messenger
                                 {
                                     Console.Write(".");
                                 }
-                                if(output != null)
+                                if(output != null && output.Connected)
                                 {
                                     Console.WriteLine("Local client created and connected");
                                 }
@@ -440,7 +440,7 @@ namespace PGP2P_Messenger
                                     Console.WriteLine("Local server created and bound");
                                 }
                             }
-                            if(output != null && input != null)
+                            if((output != null && output.Connected) && input != null)
                             {
                                 Console.WriteLine("Two way connection complete");
                                 break;
