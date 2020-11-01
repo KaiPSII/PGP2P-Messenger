@@ -403,9 +403,9 @@ namespace PGP2P_Messenger
                     }
                     if (k.Key == ConsoleKey.D3)
                     {
+                        Console.WriteLine("Enter the hostname of your target server:");
                         var listener = new TcpListener(IPAddress.Any, 24846);
                         listener.Start();
-                        Console.WriteLine("Enter the hostname of your target server:");
                         var hostName = Console.ReadLine();
                         Console.WriteLine("Press any key to cancel");
                         Console.Write("Connecting");
