@@ -9,6 +9,8 @@ using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.Unicode;
+using System.Threading;
+using System.Timers;
 
 namespace PGP2P_Messenger
 {
@@ -92,7 +94,7 @@ namespace PGP2P_Messenger
                 {
                     Console.Clear();
                     Console.ForegroundColor = ConsoleColor.Green;
-                    Console.WriteLine(String.Format(">> SIGNED IN AS '{0}' <<", username));
+                    Console.WriteLine(string.Format(">> SIGNED IN AS '{0}' <<", username));
                     Console.ForegroundColor = ConsoleColor.White;
                     Console.WriteLine("Initializing PGP2P Messenger");
                     Console.WriteLine();
@@ -114,7 +116,7 @@ namespace PGP2P_Messenger
                     else
                     {
                         Console.ForegroundColor = ConsoleColor.Green;
-                        Console.WriteLine(String.Format(">> KEY '{0}' TARGETED <<", RSATargetKeyName));
+                        Console.WriteLine(string.Format(">> KEY '{0}' TARGETED <<", RSATargetKeyName));
                     }
                     Console.ForegroundColor = ConsoleColor.White;
                     Console.WriteLine("0. Configure keys");
@@ -176,7 +178,7 @@ namespace PGP2P_Messenger
                                 else
                                 {
                                     Console.ForegroundColor = ConsoleColor.Green;
-                                    Console.WriteLine(String.Format(">> KEY '{0}' TARGETED <<", RSATargetKeyName));
+                                    Console.WriteLine(string.Format(">> KEY '{0}' TARGETED <<", RSATargetKeyName));
                                 }
                                 Console.ForegroundColor = ConsoleColor.White;
 
@@ -232,7 +234,7 @@ namespace PGP2P_Messenger
 
                                                 keyFilePrivate.Close();
                                                 File.Delete(@"Keys\PRIVATERSAKEY.xkey");
-                                                File.Delete(String.Format("Keys\\{0}.xtkey", username));
+                                                File.Delete(string.Format("Keys\\{0}.xtkey", username));
                                                 newKey = true;
                                             }
                                         }
@@ -254,7 +256,7 @@ namespace PGP2P_Messenger
                                         var privateWriter = new FileStream(@"Keys\PRIVATERSAKEY.xkey", FileMode.Create);
                                         privateWriter.Write(c.ExportRSAPrivateKey());
                                         privateWriter.Close();
-                                        var publicWriter = new FileStream(String.Format("Keys\\{0}.xtkey", username), FileMode.Create);
+                                        var publicWriter = new FileStream(string.Format("Keys\\{0}.xtkey", username), FileMode.Create);
                                         publicWriter.Write(c.ExportRSAPublicKey());
                                         publicWriter.Close();
                                     }
@@ -267,7 +269,7 @@ namespace PGP2P_Messenger
                                         Console.WriteLine("Found the following keys:");
                                         for (int i = 0; i < publicKeys.Length; i++)
                                         {
-                                            Console.WriteLine(String.Format("{0}. '{1}'", i, publicKeys[i]));
+                                            Console.WriteLine(string.Format("{0}. '{1}'", i, publicKeys[i]));
                                         }
                                         Console.WriteLine("Please make a selection:");
                                         var k4 = Console.ReadKey();
@@ -323,7 +325,7 @@ namespace PGP2P_Messenger
                                 var mc = Console.ReadLine();
                                 var es = EncryptStringRSA(mc, RSATargetKey);
                                 Console.WriteLine("<BEGIN RSA MESSAGE>");
-                                var outputMessage = new FileStream(String.Format("Messages\\from{0}to{1}.rsam", username, RSATargetKeyName), FileMode.Create);
+                                var outputMessage = new FileStream(string.Format("Messages\\from{0}to{1}.rsam", username, RSATargetKeyName), FileMode.Create);
                                 for (int i = 0; i < es.Length; i++)
                                 {
                                     Console.Write(es[i]);
@@ -332,7 +334,7 @@ namespace PGP2P_Messenger
                                 Console.WriteLine("\n<END RSA MESSAGE>");
                                 outputMessage.Close();
                                 Console.ForegroundColor = ConsoleColor.Green;
-                                Console.WriteLine(String.Format("<< Message saved to {0} >>", outputMessage.Name));
+                                Console.WriteLine(string.Format("<< Message saved to {0} >>", outputMessage.Name));
                                 Console.ForegroundColor = ConsoleColor.White;
                                 Console.WriteLine("Press any key to return");
                                 Console.ReadKey();
@@ -366,7 +368,7 @@ namespace PGP2P_Messenger
                                     Console.WriteLine("Found the following message files:");
                                     for (int i = 0; i < files.Length; i++)
                                     {
-                                        Console.WriteLine(String.Format("{0}. '{1}'", i, files[i]));
+                                        Console.WriteLine(string.Format("{0}. '{1}'", i, files[i]));
                                     }
                                     Console.WriteLine("Please make a selection:");
                                     var k3 = Console.ReadKey();
@@ -401,32 +403,129 @@ namespace PGP2P_Messenger
                     }
                     if (k.Key == ConsoleKey.D3)
                     {
-                        Console.WriteLine("0. Create connection");
-                        Console.WriteLine("1. Accept connection");
-                        var k2 = Console.ReadKey();
-                        if (k2.Key == ConsoleKey.D0)
+                        var listener = new TcpListener(IPAddress.Any, 24846);
+                        listener.Start();
+                        Console.WriteLine("Enter the hostname of your target server:");
+                        var hostName = Console.ReadLine();
+                        Console.WriteLine("Press any key to cancel");
+                        TcpClient client = null;
+                        var isHost = false;
+                        for (int i = 0; i < 60; i++)
                         {
-                            Console.WriteLine("Enter the private IP of your target client:");
-                            //192.168.8.128 rune
-                            var ip = Console.ReadLine();
-                            var ip2 = new IPAddress(IPToBytes("72.2.42.42")); //psii
-                            var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-                            var ep = new IPEndPoint(ip2, 25510);
-                            socket.BeginConnect(ep, new AsyncCallback(Connected), socket);
-                            Console.ReadKey();
+                            try
+                            {
+                                client = new TcpClient(hostName, 24846);
+                            }
+                            catch
+                            {
+                                Console.Write("X");
+                            }
+                            if (Console.KeyAvailable)
+                            {
+                                break;
+                            }
+                            if (listener.Pending())
+                            {
+                                client = listener.AcceptTcpClient();
+                                break;
+                            }
+                            Thread.Sleep(1000);
+                            Console.Write(".");
                         }
-                        else if (k2.Key == ConsoleKey.D1)
+                        listener.Stop();
+                        Console.WriteLine();
+                        //if (client != null)
+                        //{
+                        //    Console.WriteLine("Incoming connection found");
+                        //}
+                        //else
+                        //{
+                        //    Console.WriteLine("No incoming connections");
+
+                        //    Console.WriteLine("Enter the hostname of your target server:");
+                        //    Console.WriteLine("Attempting to connect:");
+                        //    for (int i = 0; i < 60; i++)
+                        //    {
+                        //        if (client != null)
+                        //        {
+                        //            break;
+                        //        }
+                        //        try
+                        //        {
+                        //        }
+                        //        catch (Exception e)
+                        //        {
+
+                        //        }
+                        //        Thread.Sleep(1000);
+                        //        Console.Write(".");
+                        //    }
+                        //    Console.WriteLine();
+                        //}
+                        if (client.Connected)
                         {
-                            var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-                            socket.BeginAccept(new AsyncCallback(Connected), socket);
-                            Console.ReadKey();
+                            Console.WriteLine("Connected succesfully!");
                         }
+                        else
+                        {
+                            Console.WriteLine("Something went wrong - maybe the connection timed out?");
+                        }
+                        Console.ReadKey();
+
+
+                        //var client = new TcpClient(hostName, portNum);
+                        //var ns = client.GetStream();
+
+                        //while (!Console.KeyAvailable)
+                        //{
+                        //    if (ns.DataAvailable)
+                        //    {
+                        //        Console.WriteLine("Message received");
+                        //        byte[] bytes = new byte[1024];
+                        //        int bytesRead = ns.Read(bytes, 0, bytes.Length);
+                        //        var t = ns.FlushAsync();
+                        //        t.Wait();
+                        //        Console.ForegroundColor = ConsoleColor.Green;
+                        //        Console.ForegroundColor = ConsoleColor.Green;
+                        //        Console.WriteLine(string.Format("{0}", Encoding.UTF8.GetString(bytes, 0, bytesRead)));
+                        //        Console.ForegroundColor = ConsoleColor.White;
+                        //    }
+                        //}
+                        //client.Close();
+                        //Console.ReadKey();
                     }
+                    //    else if (k2.Key == ConsoleKey.D1)
+                    //    {
+                    //        Console.WriteLine("Enter port number:");
+                    //        var portNum = int.Parse(Console.ReadLine());
+                    //        var listener = new TcpListener(IPAddress.Any, portNum);
+                    //        listener.Start();
+                    //        Console.Write("Waiting for connection...");
+                    //        var client = listener.AcceptTcpClient();
+                    //        Console.WriteLine("Connection accepted.");
+                    //        var ns = client.GetStream();
+                    //        while (true)
+                    //        {
+                    //            Console.Write(">> ");
+                    //            var message = Console.ReadLine();
+                    //            Console.WriteLine(string.Format("{0}: {1}", username, message));
+                    //            if (message == "exit")
+                    //            {
+                    //                break;
+                    //            }
+                    //            byte[] name = Encoding.UTF8.GetBytes(message);
+                    //            ns.Write(name, 0, name.Length);
+                    //        }
+
+                    //        ns.Close();
+                    //        client.Close();
+                    //        listener.Stop();
+                    //    }
+                    //}
                     if (k.Key == ConsoleKey.D4)
                     {
                         break;
                     }
-
 
                 }
                 else
