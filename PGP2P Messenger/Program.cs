@@ -1,5 +1,10 @@
 ﻿using System;
+using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
+using System.Net;
+using System.Net.Sockets;
+using System.Numerics;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
@@ -64,6 +69,21 @@ namespace PGP2P_Messenger
                 return r;
             }
         }
+        public static byte[] IPToBytes(string ipAddress)
+        {
+            var address = IPAddress.Parse(ipAddress);
+            byte[] bytes = address.GetAddressBytes();
+
+            // flip big-endian(network order) to little-endian
+            if (BitConverter.IsLittleEndian)
+            {
+                Array.Reverse(bytes);
+            }
+
+            return bytes;
+        }
+
+
         public void UI()
         {
             while (true)
@@ -379,10 +399,35 @@ namespace PGP2P_Messenger
                         }
 
                     }
+                    if (k.Key == ConsoleKey.D3)
+                    {
+                        Console.WriteLine("0. Create connection");
+                        Console.WriteLine("1. Accept connection");
+                        var k2 = Console.ReadKey();
+                        if (k2.Key == ConsoleKey.D0)
+                        {
+                            Console.WriteLine("Enter the private IP of your target client:");
+                            //192.168.8.128 rune
+                            var ip = Console.ReadLine();
+                            var ip2 = new IPAddress(IPToBytes("72.2.42.42")); //psii
+                            var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                            var ep = new IPEndPoint(ip2, 25510);
+                            socket.BeginConnect(ep, new AsyncCallback(Connected), socket);
+                            Console.ReadKey();
+                        }
+                        else if (k2.Key == ConsoleKey.D1)
+                        {
+                            var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                            socket.BeginAccept(new AsyncCallback(Connected), socket);
+                            Console.ReadKey();
+                        }
+                    }
                     if (k.Key == ConsoleKey.D4)
                     {
                         break;
                     }
+
+
                 }
                 else
                 {
@@ -394,6 +439,10 @@ namespace PGP2P_Messenger
                     Console.Clear();
                 }
             }
+        }
+        static void Connected(IAsyncResult result)
+        {
+            Console.WriteLine("Connected!");
         }
     }
 }
