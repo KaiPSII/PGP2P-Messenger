@@ -408,25 +408,41 @@ namespace PGP2P_Messenger
                         Console.WriteLine("Enter the hostname of your target server:");
                         var hostName = Console.ReadLine();
                         Console.WriteLine("Press any key to cancel");
-                        TcpClient client = null;
-                        var isHost = false;
+                        Console.Write("Connecting");
+                        TcpClient output = null;
+                        TcpClient input = null;
                         for (int i = 0; i < 60; i++)
                         {
-                            try
-                            {
-                                client = new TcpClient(hostName, 24846);
-                            }
-                            catch
-                            {
-                                Console.Write("X");
-                            }
                             if (Console.KeyAvailable)
                             {
                                 break;
                             }
-                            if (listener.Pending())
+                            if (output == null)
                             {
-                                client = listener.AcceptTcpClient();
+                                try
+                                {
+                                    output = new TcpClient(hostName, 24846);
+                                }
+                                catch
+                                {
+                                    Console.Write(".");
+                                }
+                                if(output != null)
+                                {
+                                    Console.WriteLine("Local client created and connected");
+                                }
+                            }
+                            if (input == null)
+                            {
+                                if (listener.Pending())
+                                {
+                                    input = listener.AcceptTcpClient();
+                                    Console.WriteLine("Local server created and bound");
+                                }
+                            }
+                            if(output != null && input != null)
+                            {
+                                Console.WriteLine("Two way connection complete");
                                 break;
                             }
                             Thread.Sleep(1000);
@@ -462,14 +478,15 @@ namespace PGP2P_Messenger
                         //    }
                         //    Console.WriteLine();
                         //}
-                        if (client.Connected)
-                        {
-                            Console.WriteLine("Connected succesfully!");
-                        }
-                        else
-                        {
-                            Console.WriteLine("Something went wrong - maybe the connection timed out?");
-                        }
+
+                        //if (client.Connected)
+                        //{
+                        //    Console.WriteLine("Connected succesfully!");
+                        //}
+                        //else
+                        //{
+                        //    Console.WriteLine("Something went wrong - maybe the connection timed out?");
+                        //}
                         Console.ReadKey();
 
 
