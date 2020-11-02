@@ -12,9 +12,9 @@ using System.Text.Unicode;
 using System.Threading;
 using System.Timers;
 
-namespace PGP2P_Messenger
+namespace RsaMessage
 {
-    class Program
+    class RsaMessageClient
     {
         public byte[] RSAKey;
         public byte[] RSATargetKey;
@@ -27,7 +27,7 @@ namespace PGP2P_Messenger
             Console.OutputEncoding = Encoding.UTF8;
             Directory.CreateDirectory("Keys");
             Directory.CreateDirectory("Messages");
-            var p = new Program();
+            var p = new RsaMessageClient();
             p.UI();
         }
         //need receiver's public key
@@ -41,7 +41,7 @@ namespace PGP2P_Messenger
             }
         }
         //need private key
-        public string DecryptBytesRSA(byte[] data, byte[] key)
+        public static string DecryptBytesRSA(byte[] data, byte[] key)
         {
             using (var rsa = RSA.Create(2048))
             {
@@ -50,7 +50,7 @@ namespace PGP2P_Messenger
                 return Encoding.UTF8.GetString(ds);
             }
         }
-        public string EncryptStringAES(string text, byte[] key, byte[] iv)
+        public static string EncryptStringAES(string text, byte[] key, byte[] iv)
         {
             using (var aes = Aes.Create())
             {
@@ -71,7 +71,18 @@ namespace PGP2P_Messenger
                 return r;
             }
         }
-
+        public static IPAddress GetLocalIPAddress()
+        {
+            var host = Dns.GetHostEntry(Dns.GetHostName());
+            foreach (var ip in host.AddressList)
+            {
+                if (ip.AddressFamily == AddressFamily.InterNetwork)
+                {
+                    return ip;
+                }
+            }
+            throw new Exception("No network adapters with an IPv4 address in the system!");
+        }
         public void UI()
         {
             while (true)

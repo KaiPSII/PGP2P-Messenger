@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30611.23
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PGP2P Messenger", "PGP2P Messenger\PGP2P Messenger.csproj", "{6A3E2337-0E2A-4142-9E62-15FB638462FE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RsaMessageClient", "PGP2P Messenger\RsaMessageClient.csproj", "{6A3E2337-0E2A-4142-9E62-15FB638462FE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RsaMessageServer", "rsa-msg-server\RsaMessageServer.csproj", "{DD38D14F-B466-432C-A45A-5BDB91B2A216}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{6A3E2337-0E2A-4142-9E62-15FB638462FE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6A3E2337-0E2A-4142-9E62-15FB638462FE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6A3E2337-0E2A-4142-9E62-15FB638462FE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DD38D14F-B466-432C-A45A-5BDB91B2A216}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DD38D14F-B466-432C-A45A-5BDB91B2A216}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DD38D14F-B466-432C-A45A-5BDB91B2A216}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DD38D14F-B466-432C-A45A-5BDB91B2A216}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
