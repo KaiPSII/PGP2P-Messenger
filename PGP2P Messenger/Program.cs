@@ -403,10 +403,10 @@ namespace PGP2P_Messenger
                     }
                     if (k.Key == ConsoleKey.D3)
                     {
-                        Console.WriteLine("Enter the hostname of your target server:");
+                        Console.WriteLine("Enter the hostname of your target device:");
+                        var hostName = Console.ReadLine();
                         var listener = new TcpListener(IPAddress.Any, 24846);
                         listener.Start();
-                        var hostName = Console.ReadLine();
                         Console.WriteLine("Press any key to cancel");
                         Console.Write("Connecting");
                         TcpClient output = null;
@@ -493,63 +493,12 @@ namespace PGP2P_Messenger
                                 }
                             }
                         }
-                        Console.ReadKey();
 
-
-                        //var client = new TcpClient(hostName, portNum);
-                        //var ns = client.GetStream();
-
-                        //while (!Console.KeyAvailable)
-                        //{
-                        //    if (ns.DataAvailable)
-                        //    {
-                        //        Console.WriteLine("Message received");
-                        //        byte[] bytes = new byte[1024];
-                        //        int bytesRead = ns.Read(bytes, 0, bytes.Length);
-                        //        var t = ns.FlushAsync();
-                        //        t.Wait();
-                        //        Console.ForegroundColor = ConsoleColor.Green;
-                        //        Console.ForegroundColor = ConsoleColor.Green;
-                        //        Console.WriteLine(string.Format("{0}", Encoding.UTF8.GetString(bytes, 0, bytesRead)));
-                        //        Console.ForegroundColor = ConsoleColor.White;
-                        //    }
-                        //}
-                        //client.Close();
-                        //Console.ReadKey();
                     }
-                    //    else if (k2.Key == ConsoleKey.D1)
-                    //    {
-                    //        Console.WriteLine("Enter port number:");
-                    //        var portNum = int.Parse(Console.ReadLine());
-                    //        var listener = new TcpListener(IPAddress.Any, portNum);
-                    //        listener.Start();
-                    //        Console.Write("Waiting for connection...");
-                    //        var client = listener.AcceptTcpClient();
-                    //        Console.WriteLine("Connection accepted.");
-                    //        var ns = client.GetStream();
-                    //        while (true)
-                    //        {
-                    //            Console.Write(">> ");
-                    //            var message = Console.ReadLine();
-                    //            Console.WriteLine(string.Format("{0}: {1}", username, message));
-                    //            if (message == "exit")
-                    //            {
-                    //                break;
-                    //            }
-                    //            byte[] name = Encoding.UTF8.GetBytes(message);
-                    //            ns.Write(name, 0, name.Length);
-                    //        }
-
-                    //        ns.Close();
-                    //        client.Close();
-                    //        listener.Stop();
-                    //    }
-                    //}
                     if (k.Key == ConsoleKey.D4)
                     {
                         break;
                     }
-
                 }
                 else
                 {
@@ -561,10 +510,6 @@ namespace PGP2P_Messenger
                     Console.Clear();
                 }
             }
-        }
-        static void Connected(IAsyncResult result)
-        {
-            Console.WriteLine("Connected!");
         }
     }
 }
