@@ -71,20 +71,6 @@ namespace PGP2P_Messenger
                 return r;
             }
         }
-        public static byte[] IPToBytes(string ipAddress)
-        {
-            var address = IPAddress.Parse(ipAddress);
-            byte[] bytes = address.GetAddressBytes();
-
-            // flip big-endian(network order) to little-endian
-            if (BitConverter.IsLittleEndian)
-            {
-                Array.Reverse(bytes);
-            }
-
-            return bytes;
-        }
-
 
         public void UI()
         {
@@ -182,7 +168,7 @@ namespace PGP2P_Messenger
                                 }
                                 Console.ForegroundColor = ConsoleColor.White;
 
-                                Console.WriteLine("0. Load key");
+                                Console.WriteLine("0. Load/create key");
                                 Console.WriteLine("1. Target key");
                                 Console.WriteLine("2. Back");
                                 Console.WriteLine("Please make a selection:");
@@ -190,9 +176,9 @@ namespace PGP2P_Messenger
                                 Console.Clear();
                                 if (k3.Key == ConsoleKey.D0)
                                 {
-                                    if (File.Exists(@"Keys\PRIVATERSAKEY.xkey"))
+                                    if (File.Exists(string.Format("Keys\\{0}_PRIVATE.xkey", username)))
                                     {
-                                        var keyFilePrivate = new FileStream(@"Keys\PRIVATERSAKEY.xkey", FileMode.Open);
+                                        var keyFilePrivate = new FileStream(string.Format("Keys\\{0}_PRIVATE.xkey", username), FileMode.Open);
                                         Console.WriteLine("RSA key found. Load key? Y/N:");
                                         var k4 = Console.ReadKey();
                                         Console.Clear();
@@ -233,7 +219,7 @@ namespace PGP2P_Messenger
                                                 Console.Clear();
 
                                                 keyFilePrivate.Close();
-                                                File.Delete(@"Keys\PRIVATERSAKEY.xkey");
+                                                File.Delete(string.Format("Keys\\{0}_PRIVATE.xkey", username));
                                                 File.Delete(string.Format("Keys\\{0}.xtkey", username));
                                                 newKey = true;
                                             }
@@ -253,7 +239,7 @@ namespace PGP2P_Messenger
                                     {
                                         var c = new RSACryptoServiceProvider(2048);
                                         RSAKey = c.ExportRSAPrivateKey();
-                                        var privateWriter = new FileStream(@"Keys\PRIVATERSAKEY.xkey", FileMode.Create);
+                                        var privateWriter = new FileStream(string.Format("Keys\\{0}_PRIVATE.xkey", username), FileMode.Create);
                                         privateWriter.Write(c.ExportRSAPrivateKey());
                                         privateWriter.Close();
                                         var publicWriter = new FileStream(string.Format("Keys\\{0}.xtkey", username), FileMode.Create);
@@ -452,48 +438,95 @@ namespace PGP2P_Messenger
                         Console.WriteLine();
                         Thread.Sleep(2000);
                         Console.Clear();
-                        Console.ForegroundColor = ConsoleColor.Green;
-                        Console.WriteLine("<< CHAT INITIATED >>");
-                        Console.ForegroundColor = ConsoleColor.White;
+                        Console.WriteLine("Syncing data");
 
                         var inS = input.GetStream();
                         var outS = output.GetStream();
-                        var sendMessageBuffer = "";
-                        Console.Write(">> ");
-                        while (true)
+
+                        //sync usernames and keys
+
+                        //username
+                        outS.Write(Encoding.UTF8.GetBytes(username.Trim()));
+                        Thread.Sleep(1000);
+                        while (!inS.DataAvailable)
                         {
-                            if (inS.DataAvailable)
+                            Thread.Sleep(1000);
+                        }
+                        var otherNameBytes = new byte[1024];
+                        var l = inS.Read(otherNameBytes, 0, 1024);
+                        var t = inS.FlushAsync();
+                        t.Wait();
+                        var otherName = Encoding.UTF8.GetString(otherNameBytes).Remove(l);
+                        Console.WriteLine(string.Format("Other client name received: {0}", otherName));
+                        //key
+                        try
+                        {
+                            var myKey = new FileStream(string.Format("Keys\\{0}.xtkey", username), FileMode.Open);
+                            var outBytes = new byte[myKey.Length];
+                            myKey.Read(outBytes, 0, (int)myKey.Length);
+                            myKey.Close();
+                            outS.Write(outBytes);
+                            Thread.Sleep(1000);
+                            while (!inS.DataAvailable)
                             {
-                                var incomingMessage = new byte[1024];
-                                var incomingMessageSize = inS.Read(incomingMessage, 0, 1024);
-                                var t = inS.FlushAsync();
-                                t.Wait();
-                                Console.WriteLine(string.Format("{0}: {1}", "other_user", Encoding.UTF8.GetString(incomingMessage)));
-                                Console.Write(">> ");
+                                Thread.Sleep(1000);
                             }
-                            if (Console.KeyAvailable)
+                            var otherKeyBytes = new byte[1024];
+                            var bl = inS.Read(otherKeyBytes, 0, 1024);
+                            t = inS.FlushAsync();
+                            t.Wait();
+                            var otherKeyBytesTruncated = new byte[bl];
+                            for (int i = 0; i < bl; i++)
                             {
-                                var key = Console.ReadKey();
-                                if (key.Key == ConsoleKey.Enter)
+                                otherKeyBytesTruncated[i] = otherKeyBytes[i];
+                            }
+                            Console.WriteLine("Other client key received");
+                            Console.ForegroundColor = ConsoleColor.Green;
+                            Console.WriteLine("<< CHAT INITIATED >>");
+                            Console.ForegroundColor = ConsoleColor.White;
+                            var sendMessageBuffer = "";
+                            Console.Write(">> ");
+                            //chat loop
+                            while (true)
+                            {
+                                if (inS.DataAvailable)
                                 {
-                                    Console.WriteLine(string.Format(">> {0}: {1}", username, sendMessageBuffer));
+                                    var incomingMessage = new byte[256];
+                                    inS.Read(incomingMessage, 0, 256);
+                                    t = inS.FlushAsync();
+                                    t.Wait();
+                                    Console.WriteLine(string.Format("{0}: {1}", otherName, DecryptBytesRSA(incomingMessage, RSAKey)));
                                     Console.Write(">> ");
-                                    outS.Write(Encoding.UTF8.GetBytes(sendMessageBuffer));
-                                    sendMessageBuffer = "";
                                 }
-                                else if (key.Key == ConsoleKey.Backspace)
+                                if (Console.KeyAvailable)
                                 {
-                                    sendMessageBuffer = sendMessageBuffer.Remove(sendMessageBuffer.Length - 1);
-                                    Console.Write(" ");
-                                    Console.CursorLeft -= 1;
-                                }
-                                else
-                                {
-                                    sendMessageBuffer += key.KeyChar;
+                                    var key = Console.ReadKey();
+                                    if (key.Key == ConsoleKey.Enter)
+                                    {
+                                        //send message
+                                        Console.WriteLine(string.Format(">> {0}: {1}", username, sendMessageBuffer));
+                                        Console.Write(">> ");
+                                        outS.Write(EncryptStringRSA(sendMessageBuffer, otherKeyBytesTruncated));
+                                        sendMessageBuffer = "";
+                                    }
+                                    else if (key.Key == ConsoleKey.Backspace && Console.CursorLeft > 1)
+                                    {
+                                        sendMessageBuffer = sendMessageBuffer.Remove(sendMessageBuffer.Length - 1);
+                                        Console.Write(" ");
+                                        Console.CursorLeft -= 1;
+                                    }
+                                    else
+                                    {
+                                        sendMessageBuffer += key.KeyChar;
+                                    }
                                 }
                             }
                         }
-
+                        catch (FileNotFoundException)
+                        {
+                            Console.WriteLine(" >> ERROR: USER MUST GENERATE KEY PAIR UNDER CURRENT USERNAME <<");
+                            Console.ReadKey();
+                        }
                     }
                     if (k.Key == ConsoleKey.D4)
                     {
@@ -506,8 +539,23 @@ namespace PGP2P_Messenger
                     Console.WriteLine(">> NOT SIGNED IN <<");
                     Console.ForegroundColor = ConsoleColor.White;
                     Console.WriteLine("Enter your username:");
-                    username = Console.ReadLine();
+                    username = Console.ReadLine().Trim();
                     Console.Clear();
+                    if (File.Exists(string.Format("Keys\\{0}_PRIVATE.xkey", username)))
+                    {
+                        var keyFilePrivate = new FileStream(string.Format("Keys\\{0}_PRIVATE.xkey", username), FileMode.Open);
+                        Console.WriteLine("RSA key found. Load key? Y/N:");
+                        var k4 = Console.ReadKey();
+                        Console.Clear();
+                        if (k4.Key == ConsoleKey.Y)
+                        {
+                            byte[] bytes = new byte[keyFilePrivate.Length];
+                            keyFilePrivate.Read(bytes, 0, (int)keyFilePrivate.Length);
+                            keyFilePrivate.Close();
+                            RSAKey = bytes;
+                        }
+                        keyFilePrivate.Close();
+                    }
                 }
             }
         }
