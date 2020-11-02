@@ -167,7 +167,6 @@ namespace PGP2P_Messenger
                                     Console.WriteLine(string.Format(">> KEY '{0}' TARGETED <<", RSATargetKeyName));
                                 }
                                 Console.ForegroundColor = ConsoleColor.White;
-
                                 Console.WriteLine("0. Load/create key");
                                 Console.WriteLine("1. Target key");
                                 Console.WriteLine("2. Back");
@@ -415,7 +414,9 @@ namespace PGP2P_Messenger
                                 }
                                 if (output != null && output.Connected)
                                 {
+                                    Console.Clear();
                                     Console.WriteLine("Local client created and connected");
+                                    Thread.Sleep(1000);
                                 }
                             }
                             if (input == null)
@@ -423,6 +424,7 @@ namespace PGP2P_Messenger
                                 if (listener.Pending())
                                 {
                                     input = listener.AcceptTcpClient();
+                                    Console.Clear();
                                     Console.WriteLine("Local server created and bound");
                                 }
                             }
