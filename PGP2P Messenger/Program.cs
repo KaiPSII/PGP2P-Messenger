@@ -427,7 +427,7 @@ namespace PGP2P_Messenger
                                 {
                                     Console.Write(".");
                                 }
-                                if(output != null && output.Connected)
+                                if (output != null && output.Connected)
                                 {
                                     Console.WriteLine("Local client created and connected");
                                 }
@@ -440,7 +440,7 @@ namespace PGP2P_Messenger
                                     Console.WriteLine("Local server created and bound");
                                 }
                             }
-                            if((output != null && output.Connected) && input != null)
+                            if ((output != null && output.Connected) && input != null)
                             {
                                 Console.WriteLine("Two way connection complete");
                                 break;
@@ -450,43 +450,49 @@ namespace PGP2P_Messenger
                         }
                         listener.Stop();
                         Console.WriteLine();
-                        //if (client != null)
-                        //{
-                        //    Console.WriteLine("Incoming connection found");
-                        //}
-                        //else
-                        //{
-                        //    Console.WriteLine("No incoming connections");
+                        Thread.Sleep(2000);
+                        Console.Clear();
+                        Console.ForegroundColor = ConsoleColor.Green;
+                        Console.WriteLine("<< CHAT INITIATED >>");
+                        Console.ForegroundColor = ConsoleColor.White;
 
-                        //    Console.WriteLine("Enter the hostname of your target server:");
-                        //    Console.WriteLine("Attempting to connect:");
-                        //    for (int i = 0; i < 60; i++)
-                        //    {
-                        //        if (client != null)
-                        //        {
-                        //            break;
-                        //        }
-                        //        try
-                        //        {
-                        //        }
-                        //        catch (Exception e)
-                        //        {
-
-                        //        }
-                        //        Thread.Sleep(1000);
-                        //        Console.Write(".");
-                        //    }
-                        //    Console.WriteLine();
-                        //}
-
-                        //if (client.Connected)
-                        //{
-                        //    Console.WriteLine("Connected succesfully!");
-                        //}
-                        //else
-                        //{
-                        //    Console.WriteLine("Something went wrong - maybe the connection timed out?");
-                        //}
+                        var inS = input.GetStream();
+                        var outS = output.GetStream();
+                        var sendMessageBuffer = "";
+                        Console.Write(">> ");
+                        while (true)
+                        {
+                            if (inS.DataAvailable)
+                            {
+                                var incomingMessage = new byte[1024];
+                                var incomingMessageSize = inS.Read(incomingMessage, 0, 1024);
+                                var t = inS.FlushAsync();
+                                t.Wait();
+                                Console.WriteLine(string.Format("{0}: {1}", "other_user", Encoding.UTF8.GetString(incomingMessage)));
+                                Console.Write(">> ");
+                            }
+                            if (Console.KeyAvailable)
+                            {
+                                var key = Console.ReadKey();
+                                if (key.Key == ConsoleKey.Enter)
+                                {
+                                    Console.WriteLine(string.Format(">> {0}: {1}", username, sendMessageBuffer));
+                                    Console.Write(">> ");
+                                    outS.Write(Encoding.UTF8.GetBytes(sendMessageBuffer));
+                                    sendMessageBuffer = "";
+                                }
+                                else if (key.Key == ConsoleKey.Backspace)
+                                {
+                                    sendMessageBuffer = sendMessageBuffer.Remove(sendMessageBuffer.Length - 1);
+                                    Console.Write(" ");
+                                    Console.CursorLeft -= 1;
+                                }
+                                else
+                                {
+                                    sendMessageBuffer += key.KeyChar;
+                                }
+                            }
+                        }
                         Console.ReadKey();
 
 
